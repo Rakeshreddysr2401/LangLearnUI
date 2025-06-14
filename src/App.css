@@ -1,0 +1,40 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: system-ui, sans-serif;
+  background: #fdfdfc;
+  overflow: hidden;
+}
+
+.headers {
+  height: 60px;
+  flex-shrink: 0;
+  background-color: #457197;
+  color: white;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.left-sidebar {
+  width: 30%;
+  background-color: #ececec;
+  border-right: 1px solid #ccc;
+}
+
+.main-content {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  background-color: #fefefe;
+}
+
+.agent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

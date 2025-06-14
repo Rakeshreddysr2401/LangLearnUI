@@ -1,0 +1,146 @@
+.message-area {
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: #fcfcf8;
+  /* border-bottom: 1px solid #ddd; */
+  border-left: 1px solid #ddd;
+  position: relative; /* ✅ This is necessary */
+}
+
+.message-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.message-wrapper {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.message-wrapper.user {
+  justify-content: flex-end;
+}
+
+.message-wrapper.assistant {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 500px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  word-break: break-word;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.message-wrapper.user .message-bubble {
+  background: linear-gradient(to right, #5e507f, #4a3f71);
+  color: white;
+  border-bottom-right-radius: 0;
+}
+
+.message-wrapper.assistant .message-bubble {
+  background: #f3f3ee;
+  color: #333;
+  border-bottom-left-radius: 0;
+  border: 1px solid #ccc;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.typing-dots .dot {
+  width: 6px;
+  height: 6px;
+  background-color: rgba(107, 114, 128, 0.7);
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.search-stages {
+  margin-bottom: 12px;
+  padding-left: 16px;
+  font-size: 14px;
+}
+
+.stage {
+  position: relative;
+  margin-bottom: 10px;
+  padding-left: 16px;
+}
+
+.dot {
+  position: absolute;
+  left: -16px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot.teal {
+  background-color: #2dd4bf;
+}
+
+.dot.red {
+  background-color: #f87171;
+}
+
+.stage-text {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.stage-query {
+  background-color: #f5f5f5;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  display: inline-block;
+}
+
+.stage-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.url-badge {
+  background-color: #f5f5f5;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.waiting-text {
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
