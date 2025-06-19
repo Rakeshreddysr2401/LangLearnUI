@@ -20,7 +20,7 @@ const SearchStages = ({ searchInfo }) => {
       {searchInfo.stages.includes("searching") && (
         <div className="stage">
           <div className="dot teal"></div>
-          <div className="stage-text">Searching the web</div>
+          <div className="stage-text">searching the web</div>
           <div className="stage-query">{searchInfo.query}</div>
         </div>
       )}

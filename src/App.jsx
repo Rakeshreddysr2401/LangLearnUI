@@ -72,17 +72,11 @@ function App() {
             },
           },
         ]);
-        // let url = `http://127.0.0.1:8000/chat_stream/${encodeURIComponent(
-        //   userInput
-        // )}`;
 
         let url = `http://localhost:8000/chat_stream/${encodeURIComponent(
           userInput
         )}`;
 
-        // let url = `https://perplexity-api.onrender.com/chat_stream/${encodeURIComponent(
-        //   userInput
-        // )}`;
         if (checkpointId) {
           url += `?checkpoint_id=${encodeURIComponent(checkpointId)}`;
         }
@@ -96,7 +90,7 @@ function App() {
             const data = JSON.parse(event.data);
 
             if (data.type === "checkpoint") {
-              setCheckpointId(data.content);
+              setCheckpointId(data.checkpoint);
             } else if (data.type === "content") {
               streamedContent += data.content;
               setMessages((prev) =>
@@ -106,7 +100,7 @@ function App() {
                     : msg
                 )
               );
-            } else if (data.type === "on_start") {
+            } else if (data.type === "tool_calling") {
               const newSearchInfo = {
                 stages: ["searching"],
                 query: data.query,
@@ -125,7 +119,7 @@ function App() {
                     : msg
                 )
               );
-            } else if (data.type === "search_results") {
+            } else if (data.type === "search_urls") {
               try {
                 const urls =
                   typeof data.urls === "string"
