@@ -2,36 +2,27 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family: system-ui, sans-serif;
-  background: #fdfdfc;
-  overflow: hidden;
 }
 
 .headers {
-  height: 60px;
   flex-shrink: 0;
-  background-color: #457197;
-  color: white;
 }
 
 .body {
-  display: flex;
   flex: 1;
-  overflow: hidden;
+  display: flex;
 }
 
 .left-sidebar {
-  width: 30%;
-  background-color: #ececec;
-  border-right: 1px solid #ccc;
+  width: 200px;
+  background: #f7f7f7;
+  border-right: 1px solid #ddd;
 }
 
 .main-content {
-  width: 70%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #fefefe;
-  overflow-y: scroll;
 }
 
 .agent {

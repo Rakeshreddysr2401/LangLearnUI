@@ -1,0 +1,19 @@
+.typing-dots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #999;
+  border-radius: 50%;
+  opacity: 0;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 1;
+  }
+}

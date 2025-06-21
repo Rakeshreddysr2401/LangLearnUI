@@ -1,263 +1,178 @@
-import Headers from "./components/Headers/Headers";
-import MessageArea from "./components/MessageArea/MessageArea";
-import InputBar from "./components/InputBar/InputBar";
-import React, { useState } from "react";
+  import Headers from "./components/Headers/Headers";
+  import MessageArea from "./components/MessageArea/MessageArea";
+  import InputBar from "./components/InputBar/InputBar";
+  import React, { useState, useRef, useCallback } from "react";
+  import { handleEventData } from "./handlers/messageHandlers";
+  import "./App.css";
 
-import "./App.css";
+  function App() {
+    const [messages, setMessages] = useState([
+      {
+        id: 1,
+        content: "Hi there, how can I help you?",
+        isUser: false,
+        type: "message",
+      },
+    ]);
+    const [currentMessage, setCurrentMessage] = useState("");
+    const [checkpointId, setCheckpointId] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    
+    const eventSourceRef = useRef(null);
 
-// types/message.ts or wherever you keep your types
+    /**
+     * Sets up a new EventSource connection
+     * @param {string} message – The message to send
+     * @param {boolean} interrupt – Flag indicating if this is an interrupt response
+     * @param {number} responseId – ID of the response message to update
+     */
+    const connectEventSource = useCallback((message, interrupt = false, responseId = null) => {
+      // Close existing stream if active
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
 
-// export interface SearchInfo {
-//   stages: string[];
-//   query: string;
-//   urls: string[];
-// }
+      setIsLoading(true);
 
-// export interface Message {
-//   id: number;
-//   content: string;
-//   isUser: boolean;
-//   type: string; // e.g., 'text' | 'search' | 'image' | 'code'
-//   isLoading?: boolean;
-//   searchInfo?: SearchInfo;
-// }
+      let url = `http://localhost:8000/chat_stream/${encodeURIComponent(message)}`;
+      const params = new URLSearchParams();
+      
+      if (checkpointId) {
+        params.append('checkpoint_id', checkpointId);
+      }
+      if (interrupt) {
+        params.append('interrupt', 'true');
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
 
-function App() {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      content: "Hi there, how can I help you?",
-      isUser: false,
-      type: "message",
-    },
-  ]);
-  const [currentMessage, setCurrentMessage] = useState("");
-  const [checkpointId, setCheckpointId] = useState(null);
+      const eventSource = new EventSource(url);
+      eventSourceRef.current = eventSource;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (currentMessage.trim()) {
-      const newMessageId =
-        messages.length > 0
-          ? Math.max(...messages.map((msg) => msg.id)) + 1
-          : 1;
+      // Use provided responseId or generate one for interrupts
+      const actualResponseId = responseId || (Date.now() + 1);
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: newMessageId,
-          content: currentMessage,
-          isUser: true,
-          type: "message",
-        },
-      ]);
+    eventSource.onmessage = (event) => {
+    const status = handleEventData(
+      event,
+      setMessages,
+      actualResponseId,
+      setCheckpointId
+    );
 
-      const userInput = currentMessage;
-      setCurrentMessage("");
+    if (status === "end") {
+      eventSource.close();
+      eventSourceRef.current = null;
+      setIsLoading(false); // stop the loader
+    }
+};
 
-      try {
-        const aiResponseId = newMessageId + 1;
+
+      eventSource.onerror = (error) => {
+        console.error("EventSource error:", error);
+        setIsLoading(false);
+        eventSource.close();
+        eventSourceRef.current = null;
+        
         setMessages((prev) => [
           ...prev,
           {
-            id: aiResponseId,
+            id: Date.now(),
+            content: "Sorry, there was an error processing your request.",
+            isUser: false,
+            type: "message",
+            isError: true,
+          },
+        ]);
+      };
+
+      eventSource.addEventListener('end', () => {
+        setIsLoading(false);
+        eventSource.close();
+        eventSourceRef.current = null;
+      });
+
+    }, [checkpointId]);
+
+    /**
+     * Handles new message submission
+     */
+    const handleSubmit = useCallback((e) => {
+      e.preventDefault();
+      if (currentMessage.trim() && !isLoading) {
+        const newMessageId = Date.now();
+        
+        // Add user message
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: newMessageId,
+            content: currentMessage,
+            isUser: true,
+            type: "message",
+          },
+        ]);
+
+        // Add loading assistant message
+        const responseId = newMessageId + 1;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: responseId,
             content: "",
             isUser: false,
             type: "message",
             isLoading: true,
-            searchInfo: {
-              stages: [],
-              query: "",
-              urls: [],
-            },
           },
         ]);
 
-        let url = `http://localhost:8000/chat_stream/${encodeURIComponent(
-          userInput
-        )}`;
-
-        if (checkpointId) {
-          url += `?checkpoint_id=${encodeURIComponent(checkpointId)}`;
-        }
-
-        const eventSource = new EventSource(url);
-        let streamedContent = "";
-        let searchData = null;
-
-        eventSource.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-
-            if (data.type === "checkpoint") {
-              setCheckpointId(data.checkpoint);
-            } else if (data.type === "content") {
-              streamedContent += data.content;
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === aiResponseId
-                    ? { ...msg, content: streamedContent, isLoading: false }
-                    : msg
-                )
-              );
-            } else if (data.type === "tool_calling") {
-              const newSearchInfo = {
-                stages: ["searching"],
-                query: data.query,
-                urls: [],
-              };
-              searchData = newSearchInfo;
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === aiResponseId
-                    ? {
-                        ...msg,
-                        content: streamedContent,
-                        searchInfo: newSearchInfo,
-                        isLoading: false,
-                      }
-                    : msg
-                )
-              );
-            } else if (data.type === "search_urls") {
-              try {
-                const urls =
-                  typeof data.urls === "string"
-                    ? JSON.parse(data.urls)
-                    : data.urls;
-
-                const newSearchInfo = {
-                  stages: searchData
-                    ? [...searchData.stages, "reading"]
-                    : ["reading"],
-                  query: searchData?.query || "",
-                  urls: urls,
-                };
-                searchData = newSearchInfo;
-
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === aiResponseId
-                      ? {
-                          ...msg,
-                          content: streamedContent,
-                          searchInfo: newSearchInfo,
-                          isLoading: false,
-                        }
-                      : msg
-                  )
-                );
-              } catch (err) {
-                console.error("Error parsing search results:", err);
-              }
-            } else if (data.type === "search_error") {
-              const newSearchInfo = {
-                stages: searchData
-                  ? [...searchData.stages, "error"]
-                  : ["error"],
-                query: searchData?.query || "",
-                error: data.error,
-                urls: [],
-              };
-              searchData = newSearchInfo;
-
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === aiResponseId
-                    ? {
-                        ...msg,
-                        content: streamedContent,
-                        searchInfo: newSearchInfo,
-                        isLoading: false,
-                      }
-                    : msg
-                )
-              );
-            } else if (data.type === "end") {
-              if (searchData) {
-                const finalSearchInfo = {
-                  ...searchData,
-                  stages: [...searchData.stages, "writing"],
-                };
-
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === aiResponseId
-                      ? {
-                          ...msg,
-                          searchInfo: finalSearchInfo,
-                          isLoading: false,
-                        }
-                      : msg
-                  )
-                );
-              }
-              eventSource.close();
-            }
-          } catch (error) {
-            console.error("Error parsing event data:", error, event.data);
-          }
-        };
-
-        eventSource.onerror = (error) => {
-          console.error("EventSource error:", error);
-          eventSource.close();
-
-          if (!streamedContent) {
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === aiResponseId
-                  ? {
-                      ...msg,
-                      content:
-                        "Sorry, there was an error processing your request.",
-                      isLoading: false,
-                    }
-                  : msg
-              )
-            );
-          }
-        };
-
-        eventSource.addEventListener("end", () => {
-          eventSource.close();
-        });
-      } catch (error) {
-        console.error("Error setting up EventSource:", error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: newMessageId + 1,
-            content: "Sorry, there was an error connecting to the server.",
-            isUser: false,
-            type: "message",
-            isLoading: false,
-          },
-        ]);
+        // Send message to backend
+        connectEventSource(currentMessage, false, responseId);
+        setCurrentMessage("");
       }
-    }
-  };
+    }, [currentMessage, isLoading, connectEventSource]);
 
-  return (
-    <div className="App">
-      <div className="headers">
-        <Headers />
-      </div>
-      <div className="body">
-        <div className="left-sidebar"> {/* Optional content */} </div>
-        <div className="main-content">
-          <div className="agent">
-            <MessageArea messages={messages} />
-            <InputBar
-              currentMessage={currentMessage}
-              setCurrentMessage={setCurrentMessage}
-              onSubmit={handleSubmit}
-            />
+    // Cleanup on unmount
+    React.useEffect(() => {
+      return () => {
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+        }
+      };
+    }, []);
+
+    return (
+      <div className="App">
+        <div className="headers">
+          <Headers />
+        </div>
+        <div className="body">
+          <div className="left-sidebar">
+            {/* Future: Navigation, conversation history, etc. */}
+          </div>
+          <div className="main-content">
+            <div className="agent">
+              <MessageArea 
+                messages={messages} 
+                setMessages={setMessages}
+                connectEventSource={connectEventSource}
+                checkpointId={checkpointId}
+                isLoading={isLoading}
+              />
+              <InputBar
+                currentMessage={currentMessage}
+                setCurrentMessage={setCurrentMessage}
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-export default App;
+  export default App;

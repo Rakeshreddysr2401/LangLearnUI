@@ -1,0 +1,57 @@
+.interrupt-request {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  position: relative;
+}
+
+.interrupt-request .interrupt-header {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  color: #856404;
+}
+
+.interrupt-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.interrupt-approve,
+.interrupt-reject,
+.interrupt-edit-btn,
+.interrupt-save,
+.interrupt-cancel {
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+}
+
+.interrupt-approve {
+  background: #28a745;
+  color: white;
+}
+.interrupt-reject {
+  background: #dc3545;
+  color: white;
+}
+.interrupt-edit-btn {
+  background: #17a2b8;
+  color: white;
+}
+.interrupt-save {
+  background: #007bff;
+  color: white;
+}
+.interrupt-cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.interrupt-edit {
+  display: flex;
+  flex-direction: column;
+}

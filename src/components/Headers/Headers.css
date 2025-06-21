@@ -1,29 +1,15 @@
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 70px;
-  background-color: #0a266c;
+  height: 60px;
+  background-color: #457197;
+  color: white;
+  padding: 0 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2rem;
-  z-index: 1000;
-  color: white;
 }
-
-.nav {
-  display: flex;
-  gap: 1.5rem;
-}
-
 .nav a {
   color: white;
-  font-weight: 600;
+  margin-left: 1rem;
   text-decoration: none;
-}
-
-.nav a:hover {
-  text-decoration: underline;
+  font-weight: bold;
 }

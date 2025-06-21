@@ -1,0 +1,258 @@
+import { v4 as uuidv4 } from "uuid";
+
+/**
+ * Handles incoming event data from the EventSource stream
+ */
+export const handleEventData = (
+  event,
+  setMessages,
+  responseId,
+  setCheckpointId
+) => {
+  try {
+    const data = JSON.parse(event.data);
+    console.log('Received event:', data);
+
+    switch (data.type) {
+      case "checkpoint":
+        setCheckpointId(data.checkpoint);
+        break;
+
+      case "content":
+        handleContentMessage(data, setMessages, responseId);
+        break;
+
+      case "tool_calling":
+        handleToolCalling(data, setMessages, responseId);
+        break;
+
+      case "search_urls":
+        handleSearchUrls(data, setMessages, responseId);
+        break;
+
+      case "interrupt_request":
+        handleInterruptRequest(data, setMessages);
+        break;
+
+      case "tool_error":
+        handleToolError(data, setMessages);
+        break;
+
+      case "error":
+        handleError(data, setMessages);
+        break;
+
+     
+      case "end":
+          handleStreamEnd(setMessages);
+          return "end"; // 🔥 return so App knows we hit end
+
+      default:
+        console.warn("Unknown event type:", data.type, data);
+        // Handle unknown types gracefully
+        handleGenericMessage(data, setMessages);
+        break;
+    }
+  } catch (error) {
+    console.error("Error parsing event data:", error, event.data);
+    handleParseError(setMessages);
+  }
+};
+
+/**
+ * Handle content messages (AI responses)
+ */
+const handleContentMessage = (data, setMessages, responseId) => {
+  setMessages((prev) =>
+    prev.map((msg) =>
+      msg.id === responseId && msg.isLoading
+        ? { 
+            ...msg, 
+            content: (msg.content || "") + data.content,
+            isLoading: false 
+          }
+        : msg
+    )
+  );
+};
+
+/**
+ * Handle tool calling events - creates search stages linked to response
+ */
+const handleToolCalling = (data, setMessages, responseId) => {
+  setMessages((prev) => {
+    // First, check if we already have a search_stages for this response
+    const existingSearchIndex = prev.findIndex(
+      (msg) => msg.type === "search_stages" && 
+               msg.responseId === responseId
+    );
+
+    if (existingSearchIndex !== -1) {
+      // Update existing search stages
+      return prev.map((msg, index) =>
+        index === existingSearchIndex
+          ? {
+              ...msg,
+              searchInfo: {
+                ...msg.searchInfo,
+                stages: ["searching"],
+                query: data.query,
+              },
+            }
+          : msg
+      );
+    } else {
+      // Create new search stages message linked to the response
+      return [
+        ...prev,
+        {
+          id: uuidv4(),
+          responseId: responseId, // Link to the main response
+          content: "",
+          isUser: false,
+          type: "search_stages",
+          searchInfo: {
+            stages: ["searching"],
+            query: data.query,
+            urls: [],
+          },
+        },
+      ];
+    }
+  });
+};
+
+/**
+ * Handle search URLs from tool results - matches to the correct search stages
+ */
+const handleSearchUrls = (data, setMessages, responseId) => {
+  setMessages((prev) =>
+    prev.map((msg) => {
+      // Find the search_stages message for this response
+      if (msg.type === "search_stages" && 
+          msg.responseId === responseId &&
+          msg.searchInfo?.stages.includes("searching") &&
+          !msg.searchInfo?.stages.includes("reading")) {
+        return {
+          ...msg,
+          searchInfo: {
+            ...msg.searchInfo,
+            urls: Array.isArray(data.urls) ? data.urls : [],
+            stages: [...msg.searchInfo.stages, "reading"],
+          },
+        };
+      }
+      return msg;
+    })
+  );
+};
+
+/**
+ * Handle interrupt requests from the agent
+ */
+const handleInterruptRequest = (data, setMessages) => {
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: uuidv4(),
+      isUser: false,
+      type: "interrupt_request",
+      interruptType: data.interruptType || "generic",
+      content: data.payload || data,
+    },
+  ]);
+};
+
+/**
+ * Handle tool errors
+ */
+const handleToolError = (data, setMessages) => {
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: uuidv4(),
+      content: `Tool Error: ${data.error}`,
+      isUser: false,
+      type: "error",
+      isError: true,
+    },
+  ]);
+};
+
+/**
+ * Handle general errors
+ */
+const handleError = (data, setMessages) => {
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: uuidv4(),
+      content: `Error: ${data.error}`,
+      isUser: false,
+      type: "error",
+      isError: true,
+    },
+  ]);
+};
+
+/**
+ * Handle stream end
+ */
+const handleStreamEnd = (setMessages) => {
+  setMessages((prev) =>
+    prev.map((msg) =>
+      msg.isLoading ? { ...msg, isLoading: false } : msg
+    )
+  );
+
+  setMessages((prev) =>
+    prev.map((msg) => {
+      if (
+        msg.type === "search_stages" &&
+        msg.searchInfo?.stages.includes("reading") &&
+        !msg.searchInfo?.stages.includes("completed")
+      ) {
+        return {
+          ...msg,
+          searchInfo: {
+            ...msg.searchInfo,
+            stages: [...msg.searchInfo.stages, "completed"],
+          },
+        };
+      }
+      return msg;
+    })
+  );
+};
+
+
+/**
+ * Handle unknown message types
+ */
+const handleGenericMessage = (data, setMessages) => {
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: uuidv4(),
+      isUser: false,
+      type: data.type || "unknown",
+      content: data.content || JSON.stringify(data),
+    },
+  ]);
+};
+
+/**
+ * Handle JSON parse errors
+ */
+const handleParseError = (setMessages) => {
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: uuidv4(),
+      content: "Error parsing server response",
+      isUser: false,
+      type: "error",
+      isError: true,
+    },  
+  ]);
+};

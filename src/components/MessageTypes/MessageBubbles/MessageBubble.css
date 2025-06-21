@@ -1,0 +1,21 @@
+.message-bubble-wrapper {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.message-bubble-wrapper.user {
+  background: #d1ecf1;
+  align-self: flex-end;
+}
+
+.message-bubble-wrapper.assistant {
+  background: #e2e3e5;
+  align-self: flex-start;
+}
+
+.message-bubble-wrapper.error {
+  background: #f8d7da;
+  color: #721c24;
+}
