@@ -6,12 +6,12 @@
 }
 
 .message-bubble-wrapper.user {
-  background: #d1ecf1;
+  background: #afcbd9;
   align-self: flex-end;
 }
 
 .message-bubble-wrapper.assistant {
-  background: #e2e3e5;
+  background: #d3ced1;
   align-self: flex-start;
 }
 

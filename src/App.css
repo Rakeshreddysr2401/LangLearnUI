@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden; /* prevent page scroll */
 }
 
 .headers {
@@ -11,22 +12,41 @@
 .body {
   flex: 1;
   display: flex;
+  overflow: hidden; /* don't allow body to scroll */
 }
 
 .left-sidebar {
-  width: 200px;
+  width: 30%;
   background: #f7f7f7;
   border-right: 1px solid #ddd;
+  flex-shrink: 0;
+  overflow-y: auto; /* optional if left-sidebar has lots of content */
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* make sure this doesn’t scroll */
 }
 
 .agent {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* 🔥 MessageArea must grow AND scroll */
+.message-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: white;
+}
+
+/* InputBar stays fixed at bottom */
+.input-bar {
+  flex-shrink: 0;
+  border-top: 1px solid #ddd;
 }

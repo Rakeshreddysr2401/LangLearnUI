@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./InterruptRequest.css";
 
 const InterruptRequest = ({ 
-  data, 
+  message, 
   connectEventSource, 
   checkpointId, 
   setMessages 
@@ -10,31 +10,26 @@ const InterruptRequest = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState("");
+  
 
   // Handle different interrupt payload structures
   const getInterruptData = () => {
-    const { content } = data;
+    
+    const {content} = message;
     
     // Handle the structure from your example: {"type":"approve_reject","data":{...}}
-    if (content?.data) {
+    if (content) {
       return {
-        type: content.type || "approve_reject",
-        mobile_number: content.data.mobile_number,
-        text_msg: content.data.text_msg,
-        context: content.data.context || "Please review and approve or reject this action.",
+        type: content.type || "generic",
+        mobile_number: content.number,
+        text_msg: content.text_msg,
+        context: "Please review and approve or reject this action.",
       };
     }
-    
-    // Handle direct content structure
-    return {
-      type: data.interruptType || "approve_reject",
-      mobile_number: content?.mobile_number,
-      text_msg: content?.text_msg || "Action required",
-      context: content?.context || "Please review and approve or reject this action.",
-    };
   };
 
   const interruptData = getInterruptData();
+
 
   const handleApprove = async () => {
     if (isProcessing) return;
@@ -47,14 +42,14 @@ const InterruptRequest = ({
       // Mark this interrupt as resolved
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === data.id
+          msg.id === message.id
             ? { ...msg, resolved: true, resolution: "approved" }
             : msg
         )
       );
       
       // Send approval to backend
-      connectEventSource(responseText, true);
+      connectEventSource(  JSON.stringify({ status: "approved", text_msg: responseText }), true);
       
     } catch (error) {
       console.error("Error approving:", error);
@@ -65,18 +60,18 @@ const InterruptRequest = ({
 
   const handleReject = () => {
     if (isProcessing) return;
-    
+     
     // Mark this interrupt as resolved
     setMessages((prev) =>
       prev.map((msg) =>
-        msg.id === data.id
+        msg.id === message.id
           ? { ...msg, resolved: true, resolution: "rejected" }
           : msg
       )
     );
     
-    // Send rejection (you might want to send this to backend too)
-    console.log("Rejected:", interruptData.text_msg);
+    connectEventSource(JSON.stringify({"status":"rejected","text_msg":"I don't want to send it"}), true);
+  
   };
 
   const handleEdit = () => {
@@ -90,11 +85,11 @@ const InterruptRequest = ({
   };
 
   // Don't show if already resolved
-  if (data.resolved) {
+  if (message.resolved) {
     return (
       <div className="interrupt-request resolved">
         <div className="interrupt-resolution">
-          ✓ {data.resolution === "approved" ? "Approved" : "Rejected"}
+          ✓ {message.resolution === "approved" ? "Approved" : "Rejected"}
         </div>
       </div>
     );

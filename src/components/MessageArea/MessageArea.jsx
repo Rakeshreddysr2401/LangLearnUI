@@ -25,7 +25,7 @@ const MessageArea = ({
         return (
           <InterruptRequest 
             key={message.id} 
-            data={message} 
+            message={message} 
             connectEventSource={connectEventSource}
             checkpointId={checkpointId}
             setMessages={setMessages}
