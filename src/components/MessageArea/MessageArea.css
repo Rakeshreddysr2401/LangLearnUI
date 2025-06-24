@@ -11,6 +11,24 @@
   gap: 0.5rem;
 }
 
+.loading-placeholder {
+  padding: 1rem;
+  color: #777;
+  text-align: center;
+  font-style: italic;
+  font-size: 14px;
+}
+
 .typing-indicator {
   padding: 0.5rem;
+  background: #fafafa;
+  border-radius: 8px;
+}
+.typing-indicator .dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #7f8c8d;
+  border-radius: 50%;
+  opacity: 0;
+  animation: blink 1s infinite;
 }
