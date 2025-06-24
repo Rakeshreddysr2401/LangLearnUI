@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import MessageBubble from "../MessageTypes/MessageBubbles/MessageBubble";
 import InterruptRequest from "../MessageTypes/InterruptRequest/InterruptRequest";
 import SearchStages from "../MessageTypes/SearchStages/SearchStages";
-import PremiumTypingAnimation from "../MessageTypes/PremiumTyping/PremiumTypingAnimation";
+import PremiumTypingAnimation from "../MessageTypes/PremiumTyping/PreminumTypingAnnotation";
 import "./MessageArea.css";
 
 const MessageArea = ({ messages, setMessages, connectEventSource, checkpointId, isLoading }) => {
