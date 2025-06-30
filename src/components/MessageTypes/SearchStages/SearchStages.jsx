@@ -33,7 +33,8 @@ const SearchStages = ({ data }) => {
 
   return (
     <div className="search-stages">
-      <div className="search-query">Searching: {searchInfo.query}</div>
+      <div className="search-query"> Query: {searchInfo.query}</div>
+      
 
       {latestStage && (
         <div className="search-progress">

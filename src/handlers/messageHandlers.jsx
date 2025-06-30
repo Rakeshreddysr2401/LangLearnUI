@@ -77,47 +77,35 @@ const handleContentMessage = (data, setMessages, responseId) => {
 };
 
 /**
- * Handle tool calling events - creates search stages linked to response
+ * Handle tool calling events - inserts search stages before assistant response
  */
 const handleToolCalling = (data, setMessages, responseId) => {
   setMessages((prev) => {
-    // First, check if we already have a search_stages for this response
-    const existingSearchIndex = prev.findIndex(
-      (msg) => msg.type === "search_stages" && 
-               msg.responseId === responseId
-    );
+    // Create new search_stages message
+    const newSearchStage = {
+      id: uuidv4(),
+      responseId,
+      type: "search_stages",
+      isUser: false,
+      content: "", // not used, but kept for consistency
+      searchInfo: {
+        stages: ["searching"],
+        query: data.query,
+        urls: [],
+      },
+    };
 
-    if (existingSearchIndex !== -1) {
-      // Update existing search stages
-      return prev.map((msg, index) =>
-        index === existingSearchIndex
-          ? {
-              ...msg,
-              searchInfo: {
-                ...msg.searchInfo,
-                stages: ["searching"],
-                query: data.query,
-              },
-            }
-          : msg
-      );
+    // Find the index of the assistant response message (id === responseId)
+    const targetIndex = prev.findIndex(msg => msg.id === responseId);
+
+    if (targetIndex !== -1) {
+      // Insert search_stages just before the assistant message
+      const before = prev.slice(0, targetIndex);
+      const after = prev.slice(targetIndex);
+      return [...before, newSearchStage, ...after];
     } else {
-      // Create new search stages message linked to the response
-      return [
-        ...prev,
-        {
-          id: uuidv4(),
-          responseId: responseId, // Link to the main response
-          content: "",
-          isUser: false,
-          type: "search_stages",
-          searchInfo: {
-            stages: ["searching"],
-            query: data.query,
-            urls: [],
-          },
-        },
-      ];
+      // Fallback: append at the end
+      return [...prev, newSearchStage];
     }
   });
 };
