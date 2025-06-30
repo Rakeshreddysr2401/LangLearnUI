@@ -5,7 +5,7 @@
 .dot {
   width: 0.5rem;
   height: 0.5rem;
-  background: #7f8c8d;
+  background: #96bdc0;
   border-radius: 50%;
   opacity: 0;
   animation: blink 1s infinite;
