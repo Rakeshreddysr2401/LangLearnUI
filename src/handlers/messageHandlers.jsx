@@ -200,13 +200,28 @@ const handleError = (data, setMessages) => {
  */
 const handleStreamEnd = (setMessages) => {
   setMessages((prev) =>
-    prev.map((msg) =>
-      msg.isLoading ? { ...msg, isLoading: false } : msg
-    )
-  );
-
-  setMessages((prev) =>
     prev.map((msg) => {
+      if (msg.isLoading) {
+        return { ...msg, isLoading: false };
+      }
+
+      // 👇 Only promote "searching" to "completed" when no reading/completed stage exists
+      if (
+        msg.type === "search_stages" &&
+        msg.searchInfo?.stages.includes("searching") &&
+        !msg.searchInfo?.stages.includes("reading") &&
+        !msg.searchInfo?.stages.includes("completed")
+      ) {
+        return {
+          ...msg,
+          searchInfo: {
+            ...msg.searchInfo,
+            stages: [...msg.searchInfo.stages, "completed"],
+          },
+        };
+      }
+
+      // Normal case: append "completed" after reading
       if (
         msg.type === "search_stages" &&
         msg.searchInfo?.stages.includes("reading") &&
@@ -220,10 +235,12 @@ const handleStreamEnd = (setMessages) => {
           },
         };
       }
+
       return msg;
     })
   );
 };
+
 
 
 /**

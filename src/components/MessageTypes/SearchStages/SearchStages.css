@@ -8,6 +8,7 @@
   margin: 8px 0;
   color: #333;
   font-size: 14px;
+  font-family: sans-serif;
 }
 
 .search-query {
@@ -20,9 +21,12 @@
 }
 
 .search-stage {
-  padding-left: 24px;
+  padding-left: 28px;
   position: relative;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s ease-out forwards;
 }
 
 .search-stage::before {
@@ -30,16 +34,43 @@
   position: absolute;
   left: 0;
   top: 6px;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background-color: #2dd4bf;
+  background-color: #22c55e;
+  animation: dotPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+.stage-icon {
+  margin-right: 8px;
 }
 
 .search-sources {
   margin-top: 8px;
   display: flex;
-  flex-wrap: wrap;  /* ✅ allow links to wrap to next line */
+  flex-wrap: wrap;
   gap: 4px;
 }
 
@@ -51,12 +82,11 @@
   font-size: 12px;
   color: #333;
   text-decoration: none;
-
-  max-width: 180px;         /* ✅ restrict width to fit box nicely */
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;      /* ✅ ellipsis if too long */
-  flex-shrink: 1;           /* ✅ allow shrinking within flex */
+  white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .search-url:hover {
@@ -70,4 +100,24 @@
   border-radius: 8px;
   color: #b91c1c;
   margin-top: 8px;
+}
+
+.search-stages.loading {
+  background: #f3f4f6;
+  border: 1px dashed #ccc;
+  padding: 16px;
+  border-radius: 16px;
+  font-style: italic;
+  color: #666;
+  font-size: 14px;
+  animation: pulseBackground 1.2s infinite alternate;
+}
+
+@keyframes pulseBackground {
+  0% {
+    background-color: #f9f9f7;
+  }
+  100% {
+    background-color: #e5e7eb;
+  }
 }
